@@ -30,7 +30,7 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 
 		response := helper.APIResponse("Register Account Failed", http.StatusUnprocessableEntity, "error", errorMessage)
 
-		c.JSON(http.StatusBadRequest, response)
+		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 	newUser, err := h.userService.RegisterUser(input)

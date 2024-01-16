@@ -4,6 +4,7 @@ import (
 	"crowdfunding/campaign"
 	"crowdfunding/helper"
 	"crowdfunding/user"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -22,31 +23,40 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 	userID, _ := strconv.Atoi(c.Query("user_id"))
 	campaigns, err := h.service.GetCampaigns(userID)
 	if err != nil {
+		fmt.Println("id salah")
 		response := helper.APIResponse("Error to get campaigns", http.StatusBadRequest, "error", nil)
-
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
+
 	response := helper.APIResponse("List of campaigns", http.StatusOK, "success", campaign.FormatCampaigns(campaigns))
 	c.JSON(http.StatusOK, response)
 }
 
 func (h *campaignHandler) GetCampaign(c *gin.Context) {
 	var input campaign.GetCampaignDetailInput
-
 	err := c.ShouldBindUri(&input)
 	if err != nil {
 		response := helper.APIResponse("Failed to get detail of campaign", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
+		return
 	}
+
 	campaignDetail, err := h.service.GetCampaignByID(input)
 	if err != nil {
 		response := helper.APIResponse("Failed to get detail of campaign", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
+		return
 	}
+	if campaignDetail.ID != input.ID {
+		message := fmt.Sprintf("No campaign with id : %d", input.ID)
+		response := helper.APIResponse(message, http.StatusBadRequest, "error", []interface{}{})
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
 	response := helper.APIResponse("Campaign detail", http.StatusOK, "success", campaign.FormatCampaignsDetail(campaignDetail))
 	c.JSON(http.StatusOK, response)
-
 }
 
 func (h *campaignHandler) CreateCampaign(c *gin.Context) {
@@ -74,5 +84,41 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 		return
 	}
 	response := helper.APIResponse("Success to create campaign", http.StatusOK, "success", campaign.FormatCampaign(newCampaign))
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
+	var inputID campaign.GetCampaignDetailInput
+
+	err := c.ShouldBindUri(&inputID)
+	if err != nil {
+		response := helper.APIResponse("Failed to update campaign", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	var inputData campaign.CreateCampaignInput
+
+	err = c.ShouldBindJSON(&inputData)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Failed to update campaign", http.StatusUnprocessableEntity, "error", errorMessage)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	currentUser := c.MustGet("currentUser").(user.User)
+	inputData.User = currentUser
+
+	updatedCampaign, err := h.service.UpdateCampaign(inputID, inputData)
+	if err != nil {
+		response := helper.APIResponse("Failed to update campaign", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	response := helper.APIResponse("Success to update campaign", http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
 	c.JSON(http.StatusOK, response)
 }
