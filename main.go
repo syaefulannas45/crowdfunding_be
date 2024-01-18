@@ -7,14 +7,13 @@ import (
 	"crowdfunding/helper"
 	"crowdfunding/transaction"
 	"crowdfunding/user"
-	"log"
-	"net/http"
-	"strings"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"log"
+	"net/http"
+	"strings"
 )
 
 func main() {
@@ -32,7 +31,7 @@ func main() {
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 	campaignService := campaign.NewService(campaignRepository)
-	transactionService := transaction.NewService(transactionRepository,campaignRepository)
+	transactionService := transaction.NewService(transactionRepository, campaignRepository)
 
 	userHandler := handler.NewUserHandler(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
@@ -54,6 +53,7 @@ func main() {
 	api.POST("/campaigns-images", authMiddleware(authService, userService), campaignHandler.UploadImage)
 
 	api.GET("/campaigns/:id/transactions", authMiddleware(authService, userService), transactionHandler.GetCampaignTransactions)
+	api.GET("transactions", authMiddleware(authService, userService), transactionHandler.GetUserTransactions)
 
 	router.Run()
 }
