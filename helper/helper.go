@@ -1,6 +1,11 @@
 package helper
 
-import "github.com/go-playground/validator/v10"
+import (
+	"math/rand"
+	"time"
+
+	"github.com/go-playground/validator/v10"
+)
 
 type Response struct {
 	Meta Meta        `json:"meta"`
@@ -12,7 +17,6 @@ type Meta struct {
 	Code    int    `json:"code"`
 	Status  string `json:"status"`
 }
-
 
 func APIResponse(message string, code int, status string, data interface{}) Response {
 	meta := Meta{
@@ -33,4 +37,18 @@ func FormatValidationError(err error) []string {
 		errors = append(errors, e.Error())
 	}
 	return errors
+}
+
+func GenerateRandomString(length int) string {
+
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	rand.Seed(time.Now().UnixNano())
+
+	randomString := make([]byte, length)
+	for i := range randomString {
+		randomString[i] = charset[rand.Intn(len(charset))]
+	}
+
+	return string(randomString)
 }
