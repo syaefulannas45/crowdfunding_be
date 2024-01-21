@@ -2,9 +2,7 @@ package payment
 
 import (
 	"crowdfunding/user"
-	// "os"
 	"strconv"
-
 	"github.com/veritrans/go-midtrans"
 )
 
@@ -46,3 +44,4 @@ func (s *service) GetPaymentURL(transaction Transaction, user user.User) (string
 
 	return snapTokenResp.RedirectURL, nil
 }
+
